@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baklava İmparatorluğu - Mega Edisyon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --main-color: #d4a017;
+            --bg-color: #fdf5e6;
+            --panel-bg: rgba(255, 255, 255, 0.95);
+            --text-color: #3e2723;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg-color);
+            font-family: 'Comfortaa', cursive;
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* --- ÜST PANEL --- */
+        .top-bar {
+            background: var(--panel-bg);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            font-size: 1.2em;
+        }
+
+        /* --- ANA OYUN DÜZENİ --- */
+        #main-container {
+            display: flex;
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 80px);
+        }
+
+        .side-spacer {
+            flex: 1;
+            pointer-events: none;
+        }
+
+        #game-field {
+            flex: 2;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border-left: 2px solid rgba(0, 0, 0, 0.05);
+            border-right: 2px solid rgba(0, 0, 0, 0.05);
+        }
+
+        #main-clicker {
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: var(--main-color);
+            border: 12px solid #8b4513;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            transition: transform 0.05s;
+            user-select: none;
+            text-align: center;
+            font-size: 1.1em;
+        }
+
+        #main-clicker:active {
+            transform: scale(0.92);
+        }
+
+        /* --- SAĞ PANEL & SEKMELER --- */
+        .side-panel {
+            flex: 1;
+            max-width: 380px;
+            background: var(--panel-bg);
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+
+        .tabs {
+            display: flex;
+            background: #eee;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            background: #e0e0e0;
+            transition: 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--panel-bg);
+            border-bottom: 4px solid var(--main-color);
+        }
+
+        .tab-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #shop-list {
+            overflow-y: auto;
+        }
+
+        .shop-item {
+            background: #5d4037;
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            font-family: inherit;
+            transition: 0.2s;
+            text-align: left;
+        }
+
+        .shop-item:hover:not(:disabled) {
+            background: #795548;
+            transform: translateX(-5px);
+        }
+
+        .shop-item:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .item-meta {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-name {
+            font-weight: bold;
+        }
+
+        .item-gain {
+            font-size: 0.8em;
+            color: #ffeb3b;
+        }
+
+        /* --- EMOJİLER & SAYILAR --- */
+        .placed-item {
+            position: absolute;
+            font-size: 30px;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .floating-num {
+            position: absolute;
+            color: #2e7d32;
+            font-weight: bold;
+            font-size: 2.5em;
+            pointer-events: none;
+            animation: fadeUp 1s forwards;
+            z-index: 1500;
+        }
+
+        @keyframes fadeUp {
+            to {
+                transform: translateY(-150px);
+                opacity: 0;
+            }
+        }
+
+        #selection-screen {
+            position: fixed;
+            inset: 0;
+            background: #fdf5e6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .select-card {
+            background: white;
+            padding: 40px;
+            margin: 20px;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            width: 250px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="selection-screen">
+        <h1>Baklava İmparatorluğu</h1>
+        <p>Lütfen bir üretim modu seçin:</p>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center;">
+            <div class="select-card" onclick="startGame('antep')" style="border-bottom: 10px solid #4CAF50;">
+                <h2 style="font-size: 4em; margin: 0;">🥜</h2>
+                <h3>Antep Fıstıklı</h3>
+            </div>
+            <div class="select-card" onclick="startGame('soguk')" style="border-bottom: 10px solid #795548;">
+                <h2 style="font-size: 4em; margin: 0;">🍫</h2>
+                <h3>Soğuk Baklava</h3>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-ui" class="hidden" style="height: 100%; display: flex; flex-direction: column;">
+        <div class="top-bar">
+            <div><span id="baklava-icon">🥮</span> Baklava: <b id="count">0</b></div>
+            <div>🚀 Sn/Üretim: <b id="bps">0</b></div>
+            <div>✨ Rebirth: <b id="rb">x1</b></div>
+        </div>
+
+        <div id="main-container">
+            <div class="side-spacer"></div>
+
+            <div id="game-field">
+                <button id="main-clicker" onclick="handleClick(event)">
+                    BURAYA TIKLA!
+                </button>
+            </div>
+
+            <div class="side-panel">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('shop')">🛒 Mağaza</button>
+                    <button class="tab-btn" onclick="switchTab('rebirth')">✨ Rebirth</button>
+                </div>
+
+                <div id="shop-tab" class="tab-content">
+                    <div id="shop-list"></div>
+                </div>
+
+                <div id="rebirth-tab" class="tab-content hidden">
+                    <h3>Yeniden Doğuş Merkezi</h3>
+                    <p>Mevcut Baklavalarını harcayarak kalıcı üretim çarpanı kazanırsın. Her şey sıfırlanır ama çok daha
+                        hızlı büyürsün!</p>
+                    <hr>
+                    <div id="rb-status">Gereken: 1,000,000 Baklava</div>
+                    <button id="rb-btn" onclick="doRebirth()"
+                        style="background:var(--main-color); border:none; padding:20px; border-radius:15px; color:white; font-weight:bold; cursor:pointer; margin-top:20px;">REBIRTH
+                        YAP</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            baklava: 0,
+            bps: 0,
+            clickPower: 1,
+            rebirths: 0,
+            inventory: {},
+            mode: 'antep'
+        };
+
+        const config = {
+            antep: { main: '#4CAF50', bg: '#f1f8e9', icon: '🥜', text: 'ANTEP FISTIKLI TEPSİSİ' },
+            soguk: { main: '#795548', bg: '#efebe9', icon: '🍫', text: 'SOĞUK BAKLAVA TEPSİSİ' }
+        };
+
+        // 20 YENİ ELEMENT + KLASİKLER (Toplam 26 Ürün)
+        const items = [
+            { id: 'i1', name: 'Çırak', emoji: '🧑‍🍳', cost: 15, gain: 1 },
+            { id: 'i2', name: 'Kalfa', emoji: '👨‍🍳', cost: 100, gain: 5 },
+            { id: 'i3', name: 'Usta', emoji: '👳‍♂️', cost: 600, gain: 20 },
+            { id: 'i4', name: 'Taş Fırın', emoji: '🔥', cost: 4000, gain: 85 },
+            { id: 'i5', name: 'Baklava Tırı', emoji: '🚛', cost: 25000, gain: 450 },
+            { id: 'i6', name: 'Mega Fabrika', emoji: '🏭', cost: 150000, gain: 2200 },
+            { id: 'i7', name: 'Gıda Mühendisi', emoji: '🧪', cost: 500000, gain: 6500 },
+            { id: 'i8', name: 'Şerbet Havuzu', emoji: '🍯', cost: 1200000, gain: 15000 },
+            { id: 'i9', name: 'Yufka Silindiri', emoji: '🌀', cost: 4500000, gain: 42000 },
+            { id: 'i10', name: 'Lojistik Üssü', emoji: '🏗️', cost: 12000000, gain: 100000 },
+            { id: 'i11', name: 'Uçan Kuryeler', emoji: '🛸', cost: 40000000, gain: 320000 },
+            { id: 'i12', name: 'Altın Tepsi', emoji: '📀', cost: 150000000, gain: 1000000 },
+            { id: 'i13', name: 'Baklava Borsası', emoji: '📉', cost: 500000000, gain: 3500000 },
+            { id: 'i14', name: 'Küresel Bayi', emoji: '🌍', cost: 1500000000, gain: 10000000 },
+            { id: 'i15', name: 'Yapay Zeka Şef', emoji: '🤖', cost: 5000000000, gain: 32000000 },
+            { id: 'i16', name: 'Şerbet Yağmuru', emoji: '🌧️', cost: 12000000000, gain: 85000000 },
+            { id: 'i17', name: 'Baklava Roketi', emoji: '🚀', cost: 40000000000, gain: 250000000 },
+            { id: 'i18', name: 'Mars Şubesi', emoji: '🔴', cost: 100000000000, gain: 700000000 },
+            { id: 'i19', name: 'Boyut Portalı', emoji: '🌀', cost: 350000000000, gain: 2000000000 },
+            { id: 'i20', name: 'Zaman Makinesi', emoji: '⏳', cost: 1000000000000, gain: 7500000000 },
+            { id: 'i21', name: 'Güneş Fırını', emoji: '☀️', cost: 5000000000000, gain: 30000000000 },
+            { id: 'i22', name: 'Galaksi Ağı', emoji: '🌌', cost: 20000000000000, gain: 110000000000 },
+            { id: 'i23', name: 'Baklava Tanrısı', emoji: '🔱', cost: 80000000000000, gain: 500000000000 },
+            { id: 'i24', name: 'Sonsuz Şerbet', emoji: '♾️', cost: 300000000000000, gain: 2000000000000 },
+            { id: 'i25', name: 'Kuantum Unu', emoji: '⚛️', cost: 1000000000000000, gain: 8000000000000 },
+            { id: 'i26', name: 'Evrensel Tepsi', emoji: '🍱', cost: 5000000000000000, gain: 45000000000000 }
+        ];
+
+        function startGame(mode) {
+            state.mode = mode;
+            const c = config[mode];
+            document.documentElement.style.setProperty('--main-color', c.main);
+            document.documentElement.style.setProperty('--bg-color', c.bg);
+            document.getElementById('baklava-icon').innerText = c.icon;
+            document.getElementById('main-clicker').innerHTML = `<b>${c.text}</b><br><br>TIKLA!`;
+            document.getElementById('selection-screen').classList.add('hidden');
+            document.getElementById('game-ui').classList.remove('hidden');
+            initShop();
+        }
+
+        function initShop() {
+            const list = document.getElementById('shop-list');
+            list.innerHTML = "";
+            items.forEach(item => {
+                state.inventory[item.id] = { count: 0, cost: item.cost };
+                let b = document.createElement('button');
+                b.id = `btn-${item.id}`;
+                b.className = 'shop-item';
+                b.onclick = () => buy(item);
+                b.innerHTML = `
+                    <div class="item-meta">
+                        <span class="item-name">${item.emoji} ${item.name} <small id="cnt-${item.id}">(0)</small></span>
+                        <span class="item-gain">+${format(item.gain)}/sn</span>
+                    </div>
+                    <b id="prc-${item.id}">${format(item.cost)}</b>`;
+                list.appendChild(b);
+            });
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+
+            if (tab === 'shop') {
+                document.getElementById('shop-tab').classList.remove('hidden');
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+            } else {
+                document.getElementById('rebirth-tab').classList.remove('hidden');
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+            }
+        }
+
+        function handleClick(e) {
+            let gain = state.clickPower * (state.rebirths + 1);
+            state.baklava += gain;
+            let n = document.createElement('div');
+            n.className = 'floating-num';
+            n.innerText = `+${format(gain)}`;
+            n.style.left = e.clientX + 'px';
+            n.style.top = e.clientY + 'px';
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 800);
+            updateUI();
+        }
+
+        function buy(item) {
+            let inv = state.inventory[item.id];
+            if (state.baklava >= inv.cost) {
+                state.baklava -= inv.cost;
+                inv.count++;
+                inv.cost = Math.floor(inv.cost * 1.3);
+                addItem(item.emoji);
+                calculate();
+                updateUI();
+            }
+        }
+
+        function addItem(emoji) {
+            const field = document.getElementById('game-field');
+            const d = document.createElement('div');
+            d.className = 'placed-item';
+            d.innerText = emoji;
+            const rect = field.getBoundingClientRect();
+            let x, y, centerX = rect.width / 2, centerY = rect.height / 2;
+            do {
+                x = Math.random() * (rect.width - 50);
+                y = Math.random() * (rect.height - 50);
+            } while (Math.hypot(x - centerX, y - centerY) < 160);
+            d.style.left = x + 'px';
+            d.style.top = y + 'px';
+            field.appendChild(d);
+        }
+
+        function calculate() {
+            let t = 0;
+            items.forEach(i => t += state.inventory[i.id].count * i.gain);
+            state.bps = t * (state.rebirths + 1);
+            state.clickPower = 1 + Math.floor(state.bps * 0.15);
+        }
+
+        function format(n) {
+            if (n >= 1e15) return (n / 1e15).toFixed(1) + 'Q';
+            if (n >= 1e12) return (n / 1e12).toFixed(1) + 'T';
+            if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+            if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+            return Math.floor(n);
+        }
+
+        function updateUI() {
+            document.getElementById('count').innerText = format(state.baklava);
+            document.getElementById('bps').innerText = format(state.bps);
+            document.getElementById('rb').innerText = `x${state.rebirths + 1}`;
+            items.forEach(i => {
+                let inv = state.inventory[i.id];
+                let btn = document.getElementById(`btn-${i.id}`);
+                document.getElementById(`cnt-${i.id}`).innerText = `(${inv.count})`;
+                document.getElementById(`prc-${i.id}`).innerText = format(inv.cost);
+                btn.disabled = state.baklava < inv.cost;
+            });
+            let rbReq = 1000000 * Math.pow(10, state.rebirths);
+            document.getElementById('rb-status').innerText = `Gereken: ${format(rbReq)} Baklava`;
+            document.getElementById('rb-btn').disabled = state.baklava < rbReq;
+        }
+
+        function doRebirth() {
+            let rbReq = 1000000 * Math.pow(10, state.rebirths);
+            if (state.baklava >= rbReq) {
+                state.rebirths++;
+                state.baklava = 0;
+                state.bps = 0;
+                document.querySelectorAll('.placed-item').forEach(el => el.remove());
+                items.forEach(i => {
+                    state.inventory[i.id].count = 0;
+                    state.inventory[i.id].cost = i.cost;
+                });
+                calculate();
+                updateUI();
+                switchTab('shop');
+                alert("Evrensel bir lezzet ustası oldun! Her şey sıfırlandı ama çarpanın arttı.");
+            }
+        }
+
+        setInterval(() => {
+            if (state.bps > 0) {
+                state.baklava += state.bps / 10;
+                updateUI();
+            }
+        }, 100);
+    </script>
+</body>
+
+</html>
